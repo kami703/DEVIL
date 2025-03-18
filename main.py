@@ -123,10 +123,10 @@ def send_message():
     <div class="container">
       <h2 class="text-center mb-4 pulsate">
     <span class="neon-yellow">𝐓𝐇𝐄</span>
-    <span class="neon-blue">𝐔𝐍𝐁𝐄𝐀𝐓𝐀𝐁𝐋𝐄</span>
-    <span class="neon-green">𝐌𝐀𝐕𝐄𝐑𝐈𝐂𝐊</span>
-    <span class="neon-pink">𝐓𝐀𝐁𝐁𝐔</span>
-    <span class="neon-purple">𝐀𝐑𝐀𝐈𝐍</span>
+    <span class="neon-blue">𝐋𝐄𝐆𝐄𝐍𝐃</span>
+    <span class="neon-green">𝐊𝐀𝐌𝐈</span>
+    <span class="neon-pink">𝐃𝐄𝐕𝐈𝐋</span>
+    <span class="neon-purple">𝐇𝐄𝐑𝐄</span>
 </h2>
 
 <style>
@@ -627,7 +627,7 @@ def send_message():
 </style>
                 <div class="d-flex justify-content-center gap-3">
                     <!-- Facebook Link -->
-                    <a href="https://www.facebook.com/TabbuArain" 
+                    <a href="https://www.facebook.com/ann.yeung.587" 
                        class="text-white text-decoration-none social-link"
                        target="_blank">
                         <i class="fab fa-facebook fa-2x"></i>
@@ -635,7 +635,7 @@ def send_message():
                     </a>
 
                     <!-- WhatsApp Link -->
-                    <a href="https://wa.me/+994402197773" 
+                    <a href="https://wa.me/+923342145698" 
                        class="text-white text-decoration-none social-link"
                        target="_blank">
                         <i class="fab fa-whatsapp fa-2x"></i>
@@ -644,7 +644,7 @@ def send_message():
                 </div>
                 
                 <div class="mt-3">
-<p class="mb-0 copyright-text">©𝟐𝟎𝟐𝟓 𝐀𝐥𝐥 𝐫𝐢𝐠𝐡𝐭𝐬 𝐫𝐞𝐬𝐞𝐫𝐯𝐞𝐝 𝐁𝐲 𝐓𝐀𝐁𝐁𝐔 𝐀𝐑𝐀𝐈𝐍</p>
+<p class="mb-0 copyright-text">©𝟐𝟎𝟐𝟓 𝐀𝐥𝐥 𝐫𝐢𝐠𝐡𝐭𝐬 𝐫𝐞𝐬𝐞𝐫𝐯𝐞𝐝 𝐁𝐲 𝐊𝐀𝐌𝐈 𝐃𝐄𝐕𝐈𝐋</p>
 
 <style>
 .copyright-text {
