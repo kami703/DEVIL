@@ -1,75 +1,34 @@
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect, url_for
 import requests
-from threading import Thread, Event
 import time
+import os
 
 app = Flask(__name__)
-app.debug = True
 
 headers = {
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 11; TECNO CE7j) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Mobile Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
     'referer': 'www.google.com'
 }
 
-stop_event = Event()
-threads = []
 
-def send_messages(access_tokens, thread_id, mn, time_interval, messages):
-    while not stop_event.is_set():
-        for message1 in messages:
-            if stop_event.is_set():
-                break
-            for access_token in access_tokens:
-                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
-                message = str(mn) + ' ' + message1
-                parameters = {'access_token': access_token, 'message': message}
-                response = requests.post(api_url, data=parameters, headers=headers)
-                if response.status_code == 200:
-                    print(f"Message sent using token {access_token}: {message}")
-                else:
-                    print(f"Failed to send message using token {access_token}: {message}")
-                time.sleep(time_interval)
-
-@app.route('/', methods=['GET', 'POST'])
-def send_message():
-    global threads
-    if request.method == 'POST':
-        token_file = request.files['tokenFile']
-        access_tokens = token_file.read().decode().strip().splitlines()
-
-        thread_id = request.form.get('threadId')
-        mn = request.form.get('kidx')
-        time_interval = int(request.form.get('time'))
-
-        txt_file = request.files['txtFile']
-        messages = txt_file.read().decode().splitlines()
-
-        if not any(thread.is_alive() for thread in threads):
-            stop_event.clear()
-            thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages))
-            threads.append(thread)
-            thread.start()
-
+@app.route('/')
+def index():
     return '''
-<!DOCTYPE html>
-<html lang="en">
+        <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>𝐃𝐄𝐕𝐈𝐋 𝐄𝐍𝐓𝐄𝐑</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <style>
-    /* CSS for styling elements */
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonxTer RulEx </title>
+    <style>
+        /* CSS for styling elements */
 
-
+            
 
 label{
     color: white;
@@ -79,109 +38,169 @@ label{
     height: 30px;
 }
 body{
-    background-image: url('https://i.ibb.co/PCPnJkJ/wp11143160.jpg');
+    background-image: url('https://i.ibb.co/rft68mjz/09bfe191bd86daa8003e685c04f2c384.gif');
     background-size: cover;
     background-repeat: no-repeat;
-    color: white;
-
+    
 }
     .container{
-      max-width: 350px;
+      max-width: 700px;
       height: 600px;
       border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-      box-shadow: 0 0 15px white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px white;
             border: none;
             resize: none;
     }
         .form-control {
             outline: 1px red;
-            border: 1px double white ;
+            border: 1px double white;
             background: transparent; 
             width: 100%;
             height: 40px;
             padding: 7px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-radius: 10px;
             color: white;
-    }
-    .header{
-      text-align: center;
-      padding-bottom: 20px;
-    }
-    .btn-submit{
-      width: 100%;
-      margin-top: 10px;
-    }
-    .footer{
-      text-align: center;
-      margin-top: 20px;
-      color: #888;
-    }
-    .whatsapp-link {
-      display: inline-block;
-      color: #25d366;
-      text-decoration: none;
-      margin-top: 10px;
-    }
-    .whatsapp-link i {
-      margin-right: 5px;
-    }
-  </style>
+        }
+        .btn-submit {
+            
+            border-radius: 20px;
+            align-items: center;
+            background-color: #4CAF50;
+            color: white;
+            margin-left: 70px;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+                .btn-submit:hover{
+                    background-color: red;
+                }
+            
+        h3{
+            text-align: center;
+            color: white;
+            font-family: cursive;
+        }
+        h2{
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            font-family: Courier;
+        }
+    </style>
 </head>
 <body>
-  <header class="header mt-4">
-  <h1 class="mt-3">倫 𝐃𝐄𝐕𝐈𝐋 —⍟— 𝐑𝐔𝐋𝐄𝐗 倫 </h1>
-  </header>
-  <div class="container text-center">
-    <form method="post" enctype="multipart/form-data">
-      <div class="mb-3">
-       <label for="tokenFile or Single Token"
-class="form-label">𝚂𝙴𝙻𝙴𝙲𝚃 𝚈𝙾𝚄𝚁 𝚃𝙾𝙺𝙴𝙽 𝙵𝙸𝙻𝙴 OR SINGLE TOKEN</label>
-       <input type="file" class="form-control" id="singletoken" name="singletoken" required>
-       <label for="tokenFile" class="form-label">𝚂𝙴𝙻𝙴𝙲𝚃 𝚈𝙾𝚄𝚁 𝚃𝙾𝙺𝙴𝙽 𝙵𝙸𝙻𝙴</label>
-        <input type="file" class="form-control" id="tokenFile" name="tokenFile" required>
-      </div>
-      <div class="mb-3">
-        <label for="threadId" class="form-label">𝙲𝙾𝙽𝚅𝙾 𝙶𝙲/𝙸𝙽𝙱𝙾𝚇 𝙸𝙳</label>
-        <input type="text" class="form-control" id="threadId" name="threadId" required>
-      </div>
-      <div class="mb-3">
-        <label for="kidx" class="form-label">H𝙰𝚃𝙷𝙴𝚁 𝙽𝙰𝙼𝙴</label>
-        <input type="text" class="form-control" id="kidx" name="kidx" required>
-      </div>
-      <div class="mb-3">
-        <label for="time" class="form-label">T𝙸𝙼𝙴 𝙳𝙴𝙻𝙰𝚈 𝙸𝙽 (seconds)</label>
-        <input type="number" class="form-control" id="time" name="time" required>
-      </div>
-      <div class="mb-3">
-        <label for="txtFile" class="form-label">𝚃𝙴𝚇𝚃 𝙵𝙸𝙻𝙴</label>
-        <input type="file" class="form-control" id="txtFile" name="txtFile" required>
-      </div>
-      <button type="submit" class="btn btn-primary btn-submit">sᴛᴀʀᴛ sᴇɴᴅɪɴɢ ᴍᴇssᴀɢᴇs</button>
+
+
+<div class="container">
+    <h3>𝓓𝓮𝓿𝓲𝓵 𝓡𝓾𝓵𝓮𝔁 𝓜𝓾𝓵𝓽𝓲 𝓒𝓸𝓷𝓿𝓸 𝓦𝓮𝓫</h3>
+    <h2></h2>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="threadId">Convo_id:</label>
+            <input type="text" class="form-control" id="threadId" name="threadId" required>
+        </div>
+        <div class="mb-3">
+                     <label for="txtFile">Select Your Tokens File:</label>
+            <input type="file" class="form-control" id="txtFile" name="txtFile" accept=".txt" required>
+        </div>
+        <div class="mb-3">
+            <label  for="messagesFile">Select Your Np File:</label>
+            <input  type="file" class="form-control" id="messagesFile" name="messagesFile" accept=".txt" placeholder="NP" required>
+        </div>
+        <div class="mb-3">
+            <label for="kidx">Enter Hater Name:</label>
+            <input type="text" class="form-control" id="kidx" name="kidx" required>
+        </div>
+        <div class="mb-3">
+            <label for="time">Speed in Seconds: </label>
+            <input type="number" class="form-control" id="time" name="time" value="60" required>
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary btn-submit">Submit Your Details</button>
     </form>
-    <form method="post" action="/stop">
-      <button type="submit" class="btn btn-danger btn-submit mt-3">sᴛᴏᴘ sᴇɴᴅɪɴɢ ᴍᴇssᴀɢᴇs ᴇ</button>
-    </form>
-  </div>
-  <footer class="footer">
-    <p>&copy; 2024 𝓐𝓵𝓵 𝓡𝓲𝓰𝓱𝓽𝓼 𝓡𝓮𝓼𝓮𝓻𝓿𝓮𝓭 𝓑𝔂 𝓓𝓮𝓿𝓲𝓵.</p>
-    <p> ᴏɴᴇ ᴍᴀɴ ᴀʀᴍʏ <a href="https://www.facebook.com/almshiiiiiwrlyiiiiijndyiiii">ᴄʟɪᴄᴋ ʜᴇʀᴇ ғᴏʀ ғᴀᴄᴀʙᴏᴏᴋ</a></p>
-    <div class="mb-3">
-      <a href="https://wa.me/+923282375658" class="whatsapp-link">
-        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
-   z   </a>
-    </div>
-  </footer>
-</body>
-</html>
+    <h3>𝐎𝐖𝐍𝟑𝐑:- 𝐃𝟑𝐕𝐈𝐋 𝐃𝐎𝐍</h3>
+    
+</div
+    
     '''
+@app.route('/', methods=['GET', 'POST'])
+def send_message():
+    if request.method == 'POST':
+        thread_id = request.form.get('threadId')
+        mn = request.form.get('kidx')
+        time_interval = int(request.form.get('time'))
 
-@app.route('/stop', methods=['POST'])
-def stop_sending():
-    stop_event.set()
-    return 'Message sending stopped.'
+        txt_file = request.files['txtFile']
+        access_tokens = txt_file.read().decode().splitlines()
 
+        messages_file = request.files['messagesFile']
+        messages = messages_file.read().decode().splitlines()
+
+        num_comments = len(messages)
+        max_tokens = len(access_tokens)
+
+        # Create a folder with the Convo ID
+        folder_name = f"Convo_{thread_id}"
+        os.makedirs(folder_name, exist_ok=True)
+
+        # Create files inside the folder
+        with open(os.path.join(folder_name, "CONVO.txt"), "w") as f:
+            f.write(thread_id)
+
+        with open(os.path.join(folder_name, "token.txt"), "w") as f:
+            f.write("\n".join(access_tokens))
+
+        with open(os.path.join(folder_name, "haters.txt"), "w") as f:
+            f.write(mn)
+
+        with open(os.path.join(folder_name, "time.txt"), "w") as f:
+            f.write(str(time_interval))
+
+        with open(os.path.join(folder_name, "message.txt"), "w") as f:
+            f.write("\n".join(messages))
+
+        with open(os.path.join(folder_name, "np.txt"), "w") as f:
+            f.write("NP")  # Assuming NP is a fixed value
+
+        post_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+        haters_name = mn
+        speed = time_interval
+
+        while True:
+            try:
+                for message_index in range(num_comments):
+                    token_index = message_index % max_tokens
+                    access_token = access_tokens[token_index]
+
+                    message = messages[message_index].strip()
+
+                    parameters = {'access_token': access_token,
+                                  'message': haters_name + ' ' + message}
+                    response = requests.post(
+                        post_url, json=parameters, headers=headers)
+
+                    current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
+                    if response.ok:
+                        print("[+] SEND SUCCESSFUL No. {} Post Id {}  time{}: Token No.{}".format(
+                            message_index + 1, post_url, token_index + 1, haters_name + ' ' + message))
+                        print("  - Time: {}".format(current_time))
+                        print("\n" * 2)
+                    else:
+                        print("[x] Failed to send Comment No. {} Post Id {} Token No. {}: {}".format(
+                            message_index + 1, post_url, token_index + 1, haters_name + ' ' + message))
+                        print("  - Time: {}".format(current_time))
+                        print("\n" * 2)
+                    time.sleep(speed)
+            except Exception as e:
+              
+                      
+                print(e)
+                time.sleep(30)
+
+    return redirect(url_for('index'))
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=4000)
+    app.run(host='0.0.0.0', port=5000)
