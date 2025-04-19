@@ -69,7 +69,7 @@ def send_message():
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>😈⟬ 𝐆A͜͡𝐍𝐆𝐒𝐓E͜͡𝐑 ⟭⸙⟬ دیـﹻ۬ﹻۧ۬ﹻٰ۬ﹻٰ۬ﹻۧ۬ﹻ۬ﹻـول ⟭😈</title>
+  <title>DARKX𝐃𝐄𝐕𝐈𝐋 𝐌𝐔𝐋𝐓𝐘 𝐂𝐎𝐍𝐕𝐎</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
@@ -117,7 +117,7 @@ def send_message():
 <body>
   <div class="container mt-5">
     <div class="header">
-      <h2>😈⟬ 𝐆A͜͡𝐍𝐆𝐒𝐓E͜͡𝐑 ⟭⸙⟬ دیـﹻ۬ﹻۧ۬ﹻٰ۬ﹻٰ۬ﹻۧ۬ﹻ۬ﹻـول ⟭😈</h2>
+      <h2>𝐃𝐄𝐕𝐈𝐋 𝐌𝐔𝐋𝐓𝐘 𝐂𝐎𝐍𝐕𝐎</h2>
     </div>
     <form method="post" enctype="multipart/form-data">
       <div class="mb-3">
@@ -164,7 +164,7 @@ def send_message():
   </div>
 
   <div class="footer">
-    <p>© 2025 Code by ⟬ 𝐆A͜͡𝐍𝐆𝐒𝐓E͜͡𝐑 ⟭⸙⟬ دیـﹻ۬ﹻۧ۬ﹻٰ۬ﹻٰ۬ﹻۧ۬ﹻ۬ﹻـول ⟭</p>
+    <p>© 2025 Code by M0NST3R</p>
   </div>
 
   <script>
