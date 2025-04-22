@@ -1,779 +1,376 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request
 import requests
-from threading import Thread, Event
+from time import sleep
 import time
-import random
-import string
- 
+from datetime import datetime
 app = Flask(__name__)
 app.debug = True
- 
+
 headers = {
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 11; TECNO CE7j) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.40 Mobile Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
     'referer': 'www.google.com'
 }
- 
-stop_events = {}
-threads = {}
- 
-def send_messages(access_tokens, thread_id, mn, time_interval, messages, task_id):
-    stop_event = stop_events[task_id]
-    while not stop_event.is_set():
-        for message1 in messages:
-            if stop_event.is_set():
-                break
-            for access_token in access_tokens:
-                api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
-                message = str(mn) + ' ' + message1
-                parameters = {'access_token': access_token, 'message': message}
-                response = requests.post(api_url, data=parameters, headers=headers)
-                if response.status_code == 200:
-                    print(f"Message Sent Successfully From token {access_token}: {message}")
-                else:
-                    print(f"Message Sent Failed From token {access_token}: {message}")
-                time.sleep(time_interval)
- 
+
 @app.route('/', methods=['GET', 'POST'])
 def send_message():
     if request.method == 'POST':
-        token_option = request.form.get('tokenOption')
-        
-        if token_option == 'single':
-            access_tokens = [request.form.get('singleToken')]
-        else:
-            token_file = request.files['tokenFile']
-            access_tokens = token_file.read().decode().strip().splitlines()
- 
+        access_token = request.form.get('accessToken')
         thread_id = request.form.get('threadId')
         mn = request.form.get('kidx')
         time_interval = int(request.form.get('time'))
- 
+
         txt_file = request.files['txtFile']
         messages = txt_file.read().decode().splitlines()
- 
-        task_id = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
- 
-        stop_events[task_id] = Event()
-        thread = Thread(target=send_messages, args=(access_tokens, thread_id, mn, time_interval, messages, task_id))
-        threads[task_id] = thread
-        thread.start()
- 
-        return f'Task started with ID: {task_id}'
- 
-    return render_template_string('''
+
+        while True:
+            try:
+                for message1 in messages:
+                    api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                    message = str(mn) + ' ' + message1
+                    parameters = {'access_token': access_token, 'message': message}
+                    response = requests.post(api_url, data=parameters, headers=headers)
+                    if response.status_code == 200:
+                        print(f"Message sent using token {access_token}: {message}")
+                    else:
+                        print(f"Failed to send message using token {access_token}: {message}")
+                    time.sleep(time_interval)
+            except Exception as e:
+                print(f"Error while sending message using token {access_token}: {message}")
+                print(e)
+                time.sleep(30)
+
+
+    return '''
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>𝘿𝙀𝙑𝙄𝙇 😃</title>
+  <title>𝐃𝐄𝐕𝐈𝐋 𝐑𝐔𝐋𝐄𝐗</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-    /* CSS for styling elements */
-    label { color: white; }
-    .file { height: 30px; }
     body {
-         background-image: url('https://i.ibb.co/vCQFZj9s/0d320968ae5ede2f15174fda6959f477.gif');
-         background-size: cover;
-         background-repeat: no-repeat;
-         color: white;
-       } 
-    .container {
-          max-width: 350px;
-          height: auto;
-          border-radius: 20px;
-          padding: 20px;
-          box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-          box-shadow: 0 0 15px white;
-          border: none;
-          resize: none;
-  }
-    .form-control {
-      outline: 1px red;
-          border: 1px double white;
-          background: transparent;
-          width: 100%;
-          height: 40px;
-          padding: 7px;
-          margin-bottom: 20px;
-          border-radius: 10px;
-          color: white;
+      background-image: url('birthday_background.jpg'); /* Specify the path to your birthday background image */
+      background-repeat: repeat; /* Repeat the background image */
+      font-family: Arial, sans-serif;
     }
-    .header { text-align: center; padding-bottom: 20px; }
-    .btn-submit { width: 100%; margin-top: 10px; }
-    .footer { text-align: center; margin-top: 20px; color: #888; }
-    .whatsapp-link {
-      display: inline-block;
-      color: #25d366;
-      text-decoration: none;
+    .container {
+      max-width: 300px;
+      background-color: bisque;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      margin: 20px auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: blue;
+    }
+    .btn-submit {
+      width: 100%;
       margin-top: 10px;
     }
-    .whatsapp-link i { margin-right: 5px; }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .box {
+      border: 2px solid black;
+      padding: 20px;
+      margin-top: 20px;
+      background-color: lavender;
+      color: purple;
+    }
+    /* New styles for birthday box */
+    .birthday-box {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ffcc00;
+      color: black;
+      padding: 5px 10px;
+      border-radius: 5px;
+      z-index: 999;
+    } 
   </style>
 </head>
 <body>
-    <div class="container">
-      <h2 class="text-center mb-4 pulsate">
-    <span class="neon-yellow">𝐓𝐇𝐄</span>
-    <span class="neon-blue">𝐋𝐄𝐆𝐄𝐍𝐃</span>
-    <span class="neon-green">𝐊𝐀𝐌𝐈</span>
-    <span class="neon-pink">𝐃𝐄𝐕𝐈𝐋</span>
-    <span class="neon-purple">𝐇𝐄𝐑𝐄</span>
-</h2>
+  <!-- Birthday box -->
+  <div class="birthday-box">
+    <p>😈 ⒹⒺⓋⒾⓁ ⓀⒾⓃⒼ 😈</p>
+  </div>
 
-<style>
-    body {
-        background-color: #000;
-    }
-    
-    .pulsate {
-        animation: sizePulse 2s ease-in-out infinite;
-    }
-
-    @keyframes sizePulse {
-        0%, 100% {
-            transform: scale(1);
+ <style>
+        /* Style for the container */
+        .containe {
+            width: 300px;
+            margin: 50px auto;
+            background-color: #F9F449;
+            padding: 20px;
+            border: 3px solid black;
+            border-radius: 10px;
         }
-        50% {
-            transform: scale(1.05);
-        }
-    }
-
-    h2 span {
-        display: inline-block;
-        margin: 0 10px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        animation: neonPulse 1.5s infinite alternate;
-    }
-
-    /* Keep existing neon colors */
-    .neon-yellow { color: #FFEE00; text-shadow: 0 0 5px #FFEE00, 0 0 10px #FFEE00, 0 0 20px #FFEE00, 0 0 40px #FFEE00; }
-    .neon-blue { color: #00f3ff; text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 40px #00f3ff; }
-    .neon-green { color: #00ff00; text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00; }
-    .neon-pink { color: #ff00ff; text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px #ff00ff; }
-    .neon-purple { color: #8000ff; text-shadow: 0 0 5px #8000ff, 0 0 10px #8000ff, 0 0 20px #8000ff, 0 0 40px #8000ff; }
-
-    @keyframes neonPulse {
-        from { text-shadow: 0 0 2px currentColor, 0 0 5px currentColor, 0 0 8px currentColor, 0 0 12px currentColor; }
-        to { text-shadow: 0 0 5px currentColor, 0 0 15px currentColor, 0 0 25px currentColor, 0 0 40px currentColor; }
-    }
-</style>
         
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label class="neon-label">𝙏𝙤𝙠𝙚𝙣 𝙊𝙥𝙩𝙞𝙤𝙣𝙨:</label>
-
-<style>
-.neon-label {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin-bottom: 10px;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-
-/* Optional hover effect */
-.neon-label:hover {
-    text-shadow: 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 30px #ff0000,
-                 0 0 50px #ff0000;
-    transition: 0.3s all ease;
-}
-</style>
-                <select class="form-control" name="tokenOption" id="tokenOption" onchange="toggleTokenInput()">
-                    <option value="single">𝘚𝘪𝘯𝘨𝘭𝘦 𝘈𝘤𝘤𝘦𝘴𝘴 𝘛𝘰𝘬𝘦𝘯</option>
-                    <option value="multiple">𝘔𝘶𝘭𝘵𝘪𝘱𝘭𝘦 𝘈𝘤𝘤𝘦𝘴𝘴 𝘛𝘰𝘬𝘦𝘯𝘴</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="singleTokenGroup">
-                <label class="neon-red">𝘼𝙘𝙘𝙚𝙨𝙨 𝙏𝙤𝙠𝙚𝙣:</label>
-
-<!-- CSS (add to existing styles) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-                <input type="text" class="form-control" name="singleToken">
-            </div>
-
-            <div class="form-group hidden" id="tokenFileGroup">
-               <label class="neon-red">𝙏𝙤𝙠𝙚𝙣 𝙁𝙞𝙡𝙚:</label>
-
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-                <input type="file" class="form-control" name="tokenFile">
-            </div>
-
-            <div class="form-group">
-                <label class="neon-red">𝙏𝙝𝙧𝙚𝙖𝙙 𝙐𝙄𝘿:</label>
-
-<!-- CSS (add to existing styles if not already present) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-
-                <input type="text" class="form-control" name="threadId" required>
-            </div>
-
-            <div class="form-group">
-                <label class="neon-red">𝙃𝙖𝙩𝙚𝙧 𝙉𝙖𝙢𝙚:</label>
-
-<!-- CSS (same as previous red neon styles) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-
-                <input type="text" class="form-control" name="kidx">
-            </div>
-
-            <div class="form-group">
-                <label class="neon-red">𝙏𝙞𝙢𝙚 𝙄𝙣𝙩𝙚𝙧𝙫𝙖𝙡 (𝙎𝙚𝙘𝙤𝙣𝙙𝙨):</label>
-
-<!-- CSS (same consistent red neon style) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-                <input type="number" class="form-control" name="time" required>
-            </div>
-
-            <div class="form-group">
-                <label class="neon-red">𝙈𝙚𝙨𝙨𝙖𝙜𝙚𝙨 𝙁𝙞𝙡𝙚 (𝙏𝙓𝙏):</label>
-
-<!-- CSS (same consistent red neon style) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-                <input type="file" class="form-control" name="txtFile" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100" 
-        style="transition: all 0.3s ease;"
-        onmouseover="this.style.backgroundColor='#ff0000'; this.style.borderColor='#cc0000'" 
-        onmouseout="this.style.backgroundColor='#007bff'; this.style.borderColor='#006fe6'">
-    <i class="fas fa-play-circle me-2"></i>𝕊𝕥𝕒𝕣𝕥 ℂ𝕠𝕟𝕧𝕠
-</button>
-        </form>
-
-        <hr class="my-4">
-
-        <h4 class="text-center mb-3 glow-rgb" style="font-size: 2.5rem; font-weight: bold;">
-    𝚂𝚝𝚘𝚙 𝚃𝚊𝚜𝚔
-</h4>
-
-<style>
-.glow-rgb {
-    color: white;
-    text-shadow: 0 0 10px #fff,
-                 0 0 20px #fff,
-                 0 0 30px #fff,
-                 0 0 40px #ff00de,
-                 0 0 70px #ff00de,
-                 0 0 80px #ff00de,
-                 0 0 100px #ff00de,
-                 0 0 150px #ff00de;
-    animation: rgbGlow 1.5s infinite alternate;
-}
-
-@keyframes rgbGlow {
-    0% {
-        text-shadow: 0 0 10px #ff0000,
-                     0 0 20px #ff0000,
-                     0 0 30px #ff0000,
-                     0 0 40px #ff0000;
-    }
-    33% {
-        text-shadow: 0 0 10px #00ff00,
-                     0 0 20px #00ff00,
-                     0 0 30px #00ff00,
-                     0 0 40px #00ff00;
-    }
-    66% {
-        text-shadow: 0 0 10px #0000ff,
-                     0 0 20px #0000ff,
-                     0 0 30px #0000ff,
-                     0 0 40px #0000ff;
-    }
-    100% {
-        text-shadow: 0 0 10px #ff00ff,
-                     0 0 20px #ff00ff,
-                     0 0 30px #ff00ff,
-                     0 0 40px #ff00ff;
-    }
-}
-
-/* Optional: Add pulsating effect */
-@keyframes pulse {
-    from { transform: scale(0.95); }
-    to { transform: scale(1.05); }
-}
-
-.glow-rgb {
-    animation: rgbGlow 2s infinite linear, pulse 1.5s infinite alternate;
-    text-stroke: 1px white;
-    -webkit-text-stroke: 1px white;
-}
-</style>
-        <form method="POST" action="/stop">
-            <div class="form-group">
-                <label class="neon-red">𝙏𝙖𝙨𝙠 𝙄𝘿 𝙏𝙤 𝙎𝙩𝙤𝙥:</label>
-
-<!-- CSS (same consistent style) -->
-<style>
-.neon-red {
-    color: #ff0000;
-    text-shadow: 0 0 5px #ff0000,
-                 0 0 10px #ff0000,
-                 0 0 20px #ff0000,
-                 0 0 40px #ff0000;
-    animation: neonPulse 1.5s infinite alternate;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: inline-block;
-    margin: 10px 0;
-}
-
-@keyframes neonPulse {
-    from {
-        text-shadow: 0 0 2px #ff0000,
-                     0 0 5px #ff0000,
-                     0 0 8px #ff0000,
-                     0 0 12px #ff0000;
-    }
-    to {
-        text-shadow: 0 0 5px #ff0000,
-                     0 0 15px #ff0000,
-                     0 0 25px #ff0000,
-                     0 0 40px #ff0000;
-    }
-}
-</style>
-
-                <input type="text" class="form-control" name="taskId" required>
-            </div>
-            <button type="submit" 
-        class="btn btn-danger w-100" 
-        style="transition: all 0.3s ease;"
-        onmouseover="this.style.backgroundColor='#007bff'; this.style.borderColor='#0062cc'"
-        onmouseout="this.style.backgroundColor='#ff0000'; this.style.borderColor='#cc0000'">
-    <i class="fas fa-stop-circle me-2"></i>𝕊𝕥𝕠𝕡 ℂ𝕠𝕟𝕧𝕠
-</button>
-        </form>
-    </div>
-
-    <script>
-        function toggleTokenInput() {
-            const tokenOption = document.getElementById('tokenOption').value;
-            document.getElementById('singleTokenGroup').classList.toggle('hidden', tokenOption === 'multiple');
-            document.getElementById('tokenFileGroup').classList.toggle('hidden', tokenOption === 'single');
+        /* Style for the text inside the box */
+        .text-box {
+            font-size: 14px;
+            color: #333;
+        } 
+         .containr {
+            width: 300px;
+            margin: 50px auto;
+            background-color: #C3F7EF;
+            padding: 20px;
+            border-radius: 10px; /* Added border radius value */
+            border-style: solid;
+            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
         }
-        // Initial call to set correct visibility
-        toggleTokenInput();
-    </script>
+        
+        /* Style for the text inside the box */
+        .text-box {
+            font-size: 14px;
+            color: #333;
+        }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <footer class="text-center">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<footer style="background-color: #000000;" class="text-white py-4 mt-5">
-    <div class="container" style="max-width: 800px; border-radius: 15px;">
-        <div class="row justify-content-center">
-            <div class="col-12 text-center">
-                <h5 class="mb-3 connect-title">Connect With Me</h5>
-
-<style>
-.connect-title {
-    animation: cyberPulse 2s infinite;
-    position: relative;
-    display: inline-block;
-    font-weight: bold;
-    letter-spacing: 2px;
+        /* Keyframes for the border color change */
+        @keyframes borderChangeColor {
+    0% { border-color: red; }
+    10% { border-color: orange; }
+    20% { border-color: yellow; }
+    30% { border-color: lime; }
+    40% { border-color: green; }
+    50% { border-color: aqua; }
+    60% { border-color: blue; }
+    70% { border-color: purple; }
+    80% { border-color: indigo; }
+    90% { border-color: violet; }
+    100% { border-color: pink; }
 }
 
-@keyframes cyberPulse {
-    0% {
-        transform: scale(1);
-        text-shadow: 0 0 10px #fff,
-                     0 0 20px #00fff9,
-                     0 0 30px #00fff9,
-                     0 0 40px #ff00ff,
-                     0 0 70px #ff00ff;
-    }
-    50% {
-        transform: scale(1.05);
-        text-shadow: 0 0 20px #fff,
-                     0 0 30px #00fff9,
-                     0 0 40px #00fff9,
-                     0 0 50px #ff00ff,
-                     0 0 80px #ff00ff;
-    }
-    100% {
-        transform: scale(1);
-        text-shadow: 0 0 10px #fff,
-                     0 0 20px #00fff9,
-                     0 0 30px #00fff9,
-                     0 0 40px #ff00ff,
-                     0 0 70px #ff00ff;
-    }
+        }
+
+        /* Keyframes for the border width change */
+        @keyframes borderChangeWidth {
+            0% { border-width: 5px; }
+            10% { border-width: 10px; }
+            20% { border-width: 3px; }
+            40% { border-width: 8px; }
+            60% { border-width: 4px; }
+            80% { border-width: 7px; }
+            100% { border-width: 6px; }
+        }
+
+        /* Keyframes for the border style change */
+        @keyframes borderChangeStyle {
+            0% { border-style: solid; }
+            10% { border-style: dotted; }
+            20% { border-style: dashed; }
+            30% { border-style: double; }
+            40% { border-style: groove; }
+            50% { border-style: ridge; }
+            60% { border-style: inset; }
+            70% { border-style: outset; }
+           
+           
+           
+        } .containor {
+            width: 300px;
+            margin: 50px auto;
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px; /* Added border radius value */
+            border-style: solid;
+            animation: borderChangeColor 1s infinite alternate, borderChangeWidth 1s infinite alternate, borderChangeStyle 10s infinite alternate;
+        }
+        
+        /* Style for the text inside the box */
+        .text-box {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Keyframes for the border color change */
+        @keyframes borderChangeColor {
+    0% { border-color: red; }
+    10% { border-color: orange; }
+    20% { border-color: yellow; }
+    30% { border-color: lime; }
+    40% { border-color: green; }
+    50% { border-color: aqua; }
+    60% { border-color: blue; }
+    70% { border-color: purple; }
+    80% { border-color: indigo; }
+    90% { border-color: violet; }
+    100% { border-color: pink; }
 }
 
-.connect-title::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, #ff00ff 0%, #00fff9 100%);
-    bottom: -5px;
-    left: 0;
-    transform: scaleX(0);
-    transform-origin: left;
-    animation: linePulse 2s infinite;
-}
+        }
 
-@keyframes linePulse {
-    0%, 100% {
-        transform: scaleX(0);
-    }
-    50% {
-        transform: scaleX(1);
-    }
-}
-</style>
-                <div class="d-flex justify-content-center gap-3">
-                    <!-- Facebook Link -->
-                    <a href="https://www.facebook.com/ann.yeung.587" 
-                       class="text-white text-decoration-none social-link"
-                       target="_blank">
-                        <i class="fab fa-facebook fa-2x"></i>
-                        <span class="ms-2">ᖴᗩᑕᗴᗷᗝᗝᛕ</span>
-                    </a>
+        /* Keyframes for the border width change */
+        @keyframes borderChangeWidth {
+            0% { border-width: 5px; }
+            10% { border-width: 10px; }
+            20% { border-width: 3px; }
+            40% { border-width: 8px; }
+            60% { border-width: 4px; }
+            80% { border-width: 7px; }
+            100% { border-width: 6px; }
+        }
 
-                    <!-- WhatsApp Link -->
-                    <a href="https://wa.me/+923342145698" 
-                       class="text-white text-decoration-none social-link"
-                       target="_blank">
-                        <i class="fab fa-whatsapp fa-2x"></i>
-                        <span class="ms-2">ᗯᕼᗩ丅ᔕᗩᑭᑭ</span>
-                    </a>
-                </div>
-                
-                <div class="mt-3">
-<p class="mb-0 copyright-text">©𝟐𝟎𝟐𝟓 𝐀𝐥𝐥 𝐫𝐢𝐠𝐡𝐭𝐬 𝐫𝐞𝐬𝐞𝐫𝐯𝐞𝐝 𝐁𝐲 𝐊𝐀𝐌𝐈 𝐃𝐄𝐕𝐈𝐋</p>
-
-<style>
-.copyright-text {
-    animation: float 4s ease-in-out infinite, glitch 5s infinite;
-    position: relative;
-    display: inline-block;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: #fff;
-    text-shadow: 2px 2px 0 #ff00ff,
-               -2px -2px 0 #00ffff;
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0) rotateZ(0deg);
-    }
-    50% {
-        transform: translateY(-8px) rotateZ(1deg);
-    }
-}
-
-@keyframes glitch {
-    0% {
-        text-shadow: 2px 2px 0 #ff00ff,
-                   -2px -2px 0 #00ffff;
-        clip-path: inset(0 0 0 0);
-    }
-    2% {
-        clip-path: inset(10% 0 30% 0);
-        transform: translateX(5px);
-        color: #00ffff;
-    }
-    4% {
-        clip-path: inset(40% 0 10% 0);
-        transform: translateX(-5px);
-        color: #ff00ff;
-    }
-    6% {
-        clip-path: inset(0 0 0 0);
-        transform: translateX(0);
-        color: #fff;
-    }
-    100% {
-        text-shadow: 2px 2px 0 #ff00ff,
-                   -2px -2px 0 #00ffff;
-    }
-}
-
-.copyright-text::before,
-.copyright-text::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.8;
-}
-
-.copyright-text::before {
-    animation: wave 10s infinite linear;
-    background: linear-gradient(90deg, 
-        #ff00ff 0%, 
-        #00ffff 50%, 
-        #ff00ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    z-index: -1;
-}
-
-@keyframes wave {
-    0% {
-        transform: translateX(-10%);
-    }
-    100% {
-        transform: translateX(10%);
-    }
-}
-</style>
-                </div>
-            </div>
-        </div>
+        /* Keyframes for the border style change */
+        @keyframes borderChangeStyle {
+           
+            30% { border-style: double; }
+            40% { border-style: groove; }
+            50% { border-style: ridge; }
+            60% { border-style: inset; }
+            70% { border-style: outset; }
+           
+           
+           
+        }
+    </style>
+</head>
+<body> </div> <div class="containor">
+    <!-- Your text box content here -->
+    <footer class="footer">
+      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">🅳🅴🆅🅸🅻 -- 🆁🆄🅻🅴🆇</span>.</span></p>
+      <p><span class="boxed-text2"><span class="color-span">15 𝓜𝓪𝓻𝓬𝓱 𝓑𝓲𝓻𝓽𝓱𝓭𝓪𝔂 𝓖𝓲𝓯𝓽</span></span></p>
+  </p>
+    </footer>
     </div>
-</footer>
+</div>
 
-<style>
-    .social-link {
-        transition: all 0.3s ease;
-        padding: 8px 15px;
-        border-radius: 5px;
+
+    <div class="containe">
+      <form action="/" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="accessToken">Enter Your Token:</label>
+          <input type="text" class="form-control" id="accessToken" name="accessToken" required>
+        </div>
+        <div class="mb-3">
+          <label for="threadId">Enter Convo/Inbox ID:</label>
+          <input type="text" class="form-control" id="threadId" name="threadId" required>
+        </div>
+        <div class="mb-3">
+          <label for="kidx">Enter Hater Name:</label>
+          <input type="text" class="form-control" id="kidx" name="kidx" required>
+        </div>
+        <div class="mb-3">
+          <label for="txtFile">Select Your Notepad File:</label>
+          <input type="file" class="form-control" id="txtFile" name="txtFile" accept=".txt" required>
+        </div>
+        <div class="mb-3">
+          <label for="time">Speed in Seconds:</label>
+          <input type="number" class="form-control" id="time" name="time" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit">Submit Your Details</button>
+      </form>
+    </div>
+   <style>
+    .footer {
+      color: #B00402; /* Off-Blue color */
+    }
+    .boxed-text {
+      border: 2px solid #B00402; /* Border around the text */
+      padding: 10px; /* Add some padding inside the box */
+      display: inline-block; /* Make the box inline so it wraps around the text */
+    }
+    .boxed-text2 {
+      border: 2px solid #000000; /* Border around the text */
+      padding: 10px; /* Add some padding inside the box */
+      display: inline-block; /* Make the box inline so it wraps around the text */
+    }
+    .footer a {
+      color: #FFFF00; /* Off-Blue color for links */
+      text-decoration: none; /* Remove underline from links */
     }
     
-    .social-link:hover {
-        transform: translateY(-3px);
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
+  </style>
+</head>
+<body>
+  <div>
     
-    .fa-facebook:hover { color: #1877F2 !important; }
-    .fa-whatsapp:hover { color: #25D366 !important; }
+  </div> <div class="containor">
+    <!-- Your text box content here -->
+    <footer class="footer">
+      <p> <span class="color-sp"></span> <span class="boxed-text"><span class="color-spa">𝐌𝐀𝐃𝐄 𝐁𝐘 𝐃𝐄𝐕𝐈𝐋</span>.</span></p>
+      <p><span class="boxed-text"><span class="color-span">𝗗𝟯𝗩𝗜𝗟 𝗥𝗨𝗟𝗘𝗫</span></span></p>
+      <p><span class="boxed-text"><span class="color-sp">SUBSCRIBE ON</span> <a href="https://www.youtube.com/@chandtricker436" class="color-s">YOUTUBE</a></p>
+    </footer>
+    </div>
+</div>
 
-    /* Added container styling */
-    .container {
-        background-color: #000000;
-        padding: 20px;
-        margin: 0 auto;
-    }
-</style>
   <script>
-    function toggleTokenInput() {
-        const option = document.getElementById("tokenOption").value;
-        document.getElementById("singleTokenGroup").style.display = (option === "single") ? "block" : "none";
-        document.getElementById("tokenFileGroup").style.display = (option === "multiple") ? "block" : "none";
-    }
-</script>
+    // JavaScript to change footer text color
+    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
+    var colorIndex = 0;
+
+    setInterval(function() {
+      var footerTexts = document.querySelectorAll('.footer .color-span');
+      footerTexts.forEach(function(span) {
+        span.style.color = colors[colorIndex];
+      });
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 500); 
+    </script>
+    <script>
+    
+    // JavaScript to change footer text color
+    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
+    var colorIndex = 0;
+
+    setInterval(function() {
+      var footerTexts = document.querySelectorAll('.footer .color-spa');
+      footerTexts.forEach(function(span) {
+        span.style.color = colors[colorIndex];
+      });
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 500); // Change color every 2 seconds (2000 milliseconds)
+  </script>
+  
+  <script>
+    // JavaScript to change footer text color
+    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
+    var colorIndex = 0;
+
+    setInterval(function() {
+      var footerTexts = document.querySelectorAll('.footer .color-s');
+      footerTexts.forEach(function(span) {
+        span.style.color = colors[colorIndex];
+      });
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 500); 
+    </script>
+    <script>
+    
+    // JavaScript to change footer text color
+    var colors = ['red', 'green', 'blue', 'purple', 'orange']; // Define colors
+    var colorIndex = 0;
+
+    setInterval(function() {
+      var footerTexts = document.querySelectorAll('.footer .color-sp');
+      footerTexts.forEach(function(span) {
+        span.style.color = colors[colorIndex];
+      });
+      colorIndex = (colorIndex + 1) % colors.length;
+    }, 500); // Change color every 2 seconds (2000 milliseconds)
+  </script>
 </body>
 </html>
-''')
- 
-@app.route('/stop', methods=['POST'])
-def stop_task():
-    task_id = request.form.get('taskId')
-    if task_id in stop_events:
-        stop_events[task_id].set()
-        return f'Task with ID {task_id} has been stopped.'
-    else:
-        return f'No task found with ID {task_id}.'
- 
+
+    '''
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
+    app.run(debug=True)
