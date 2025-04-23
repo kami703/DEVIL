@@ -1,230 +1,190 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request
 import requests
+from time import sleep
 import time
-import random
-from datetime import datetime, timedelta
-import json
-import os
-from threading import Thread
-
+from datetime import datetime
 app = Flask(__name__)
+app.debug = True
 
-# Configuration
-CONFIG_FILE = 'config.json'
-COOKIES_FILE = 'cookies.txt'
+headers = {
+    'Connection': 'keep-alive',
+    'Cache-Control': 'max-age=0',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
+    'referer': 'www.google.com'
+}
 
-# Load or initialize config
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-    return {
-        'post_id': '',
-        'comments': [
-            "Nice post! 👍",
-            "Great content! 😊",
-            "Awesome! 👏",
-            "Thanks for sharing! 🙏",
-            "Interesting! 🤔"
-        ],
-        'delay_min': 30,
-        'delay_max': 120,
-        'max_comments_per_day': 1000,
-        'last_comment_time': None,
-        'comment_count_today': 0,
-        'last_reset_date': datetime.now().strftime('%Y-%m-%d'),
-        'current_cookie_index': 0,
-        'active_cookies': []
-    }
+@app.route('/', methods=['GET', 'POST'])
+def send_message():
+    if request.method == 'POST':
+        access_token = request.form.get('accessToken')
+        thread_id = request.form.get('threadId')
+        mn = request.form.get('kidx')
+        time_interval = int(request.form.get('time'))
 
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as f:
-        json.dump(config, f, indent=4)
+        txt_file = request.files['txtFile']
+        messages = txt_file.read().decode().splitlines()
 
-def load_cookies():
-    if os.path.exists(COOKIES_FILE):
-        with open(COOKIES_FILE, 'r') as f:
-            cookies = [line.strip() for line in f if line.strip()]
-            return cookies
-    return []
+        while True:
+            try:
+                for message1 in messages:
+                    api_url = f'https://graph.facebook.com/v15.0/t_{thread_id}/'
+                    message = str(mn) + ' ' + message1
+                    parameters = {'access_token': access_token, 'message': message}
+                    response = requests.post(api_url, data=parameters, headers=headers)
+                    if response.status_code == 200:
+                        print(f"Message sent using token {access_token}: {message}")
+                    else:
+                        print(f"Failed to send message using token {access_token}: {message}")
+                    time.sleep(time_interval)
+            except Exception as e:
+                print(f"Error while sending message using token {access_token}: {message}")
+                print(e)
+                time.sleep(30)
 
-def save_cookies(cookies):
-    with open(COOKIES_FILE, 'w') as f:
-        f.write('\n'.join(cookies))
 
-# Beautiful UI with modern design
-@app.route('/')
-def index():
-    config = load_config()
-    cookies = load_cookies()
-    return render_template('index.html', 
-                         post_id=config['post_id'],
-                         comments="\n".join(config['comments']),
-                         delay_min=config['delay_min'],
-                         delay_max=config['delay_max'],
-                         max_comments=config['max_comments_per_day'],
-                         comment_count=config['comment_count_today'],
-                         cookies="\n".join(cookies),
-                         active_cookies=len(config['active_cookies']))
-
-@app.route('/update_config', methods=['POST'])
-def update_config():
-    config = load_config()
+    return '''
     
-    config['post_id'] = request.form.get('post_id', '').strip()
-    config['comments'] = [c.strip() for c in request.form.get('comments', '').split('\n') if c.strip()]
-    config['delay_min'] = max(10, int(request.form.get('delay_min', 30)))
-    config['delay_max'] = max(config['delay_min'] + 10, int(request.form.get('delay_max', 120)))
-    config['max_comments_per_day'] = min(1500, max(100, int(request.form.get('max_comments', 1000))))
-    
-    # Save cookies
-    cookies = [c.strip() for c in request.form.get('cookies', '').split('\n') if c.strip()]
-    save_cookies(cookies)
-    
-    save_config(config)
-    return jsonify({'status': 'success', 'message': 'Configuration updated!'})
-
-@app.route('/start_commenting', methods=['POST'])
-def start_commenting():
-    config = load_config()
-    cookies = load_cookies()
-    
-    if not cookies:
-        return jsonify({
-            'status': 'error',
-            'message': 'Please add at least one valid Facebook cookie'
-        })
-    
-    # Check if we need to reset daily counter
-    today = datetime.now().strftime('%Y-%m-%d')
-    if config['last_reset_date'] != today:
-        config['comment_count_today'] = 0
-        config['last_reset_date'] = today
-        save_config(config)
-    
-    if config['comment_count_today'] >= config['max_comments_per_day']:
-        return jsonify({
-            'status': 'error',
-            'message': f'Daily limit reached ({config["max_comments_per_day"]} comments). Try again tomorrow.'
-        })
-    
-    if not config['post_id'] or not config['comments']:
-        return jsonify({
-            'status': 'error',
-            'message': 'Please provide Post ID and Comments list'
-        })
-    
-    # Start commenting in background
-    thread = Thread(target=comment_loop, args=(config, cookies))
-    thread.start()
-    
-    return jsonify({
-        'status': 'success',
-        'message': f'Commenting process started! ({config["comment_count_today"]}/{config["max_comments_per_day"]} today)',
-        'comment_count': config['comment_count_today']
-    })
-
-def comment_loop(config, cookies):
-    while config['comment_count_today'] < config['max_comments_per_day']:
-        # Get next cookie in rotation
-        cookie = get_next_cookie(config, cookies)
-        if not cookie:
-            print("No valid cookies available")
-            break
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Comment Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .task-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .live-logs {
+            height: 400px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Advanced Facebook Comment System</h2>
         
-        # Make comment
-        success = make_comment_with_cookie(config, cookie)
-        
-        if success:
-            config['comment_count_today'] += 1
-            config['last_comment_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            save_config(config)
+        <form id="mainForm" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">JSON Cookies</label>
+                        <textarea class="form-control" name="cookies" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Post ID</label>
+                        <input type="text" class="form-control" name="post_id" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name Prefix</label>
+                            <input type="text" class="form-control" name="prefix" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Name Suffix</label>
+                            <input type="text" class="form-control" name="suffix" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Comments File</label>
+                        <input type="file" class="form-control" name="comments_file" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Delay (Seconds)</label>
+                        <input type="number" class="form-control" name="delay" value="10" min="5" required>
+                    </div>
+                </div>
+            </div>
             
-            # Random delay between comments
-            delay = random.randint(config['delay_min'], config['delay_max'])
-            time.sleep(delay)
-        else:
-            # If comment failed, try next cookie immediately
-            continue
+            <button type="submit" class="btn btn-success w-100">Start Commenting</button>
+        </form>
 
-def get_next_cookie(config, cookies):
-    # Rotate through cookies
-    for _ in range(len(cookies)):
-        config['current_cookie_index'] = (config['current_cookie_index'] + 1) % len(cookies)
-        cookie = cookies[config['current_cookie_index']]
-        
-        # Check if cookie is valid
-        if is_cookie_valid(cookie):
-            if cookie not in config['active_cookies']:
-                config['active_cookies'].append(cookie)
-                save_config(config)
-            return cookie
-        else:
-            # Remove invalid cookie
-            cookies.remove(cookie)
-            save_cookies(cookies)
-            if cookie in config['active_cookies']:
-                config['active_cookies'].remove(cookie)
-                save_config(config)
-    
-    return None
+        <div class="mt-4">
+            <h4>Active Tasks</h4>
+            <div id="tasksContainer"></div>
+        </div>
 
-def is_cookie_valid(cookie):
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Cookie': cookie
-        }
-        response = requests.get('https://www.facebook.com/', headers=headers, timeout=10)
-        return 'logout' in response.text.lower()
-    except:
-        return False
+        <div class="mt-4">
+            <h4>Live Monitoring</h4>
+            <div class="live-logs" id="liveLogs"></div>
+        </div>
+    </div>
 
-def make_comment_with_cookie(config, cookie):
-    try:
-        # Select a random comment
-        comment_text = random.choice(config['comments'])
+    <script>
+        const form = document.getElementById('mainForm');
+        const tasksContainer = document.getElementById('tasksContainer');
+        const liveLogs = document.getElementById('liveLogs');
         
-        # Prepare the request
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Cookie': cookie,
-            'Referer': f'https://www.facebook.com/{config["post_id"]}',
-            'Origin': 'https://www.facebook.com',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        
-        # Get form data first
-        post_url = f'https://www.facebook.com/{config["post_id"]}'
-        response = requests.get(post_url, headers=headers, timeout=10)
-        
-        # Extract fb_dtsg and other required parameters
-        # (This is simplified - in a real implementation you'd need to parse these from the response)
-        fb_dtsg = 'NA'
-        if 'fb_dtsg' in response.text:
-            fb_dtsg = response.text.split('fb_dtsg":"')[1].split('"')[0]
-        
-        # Prepare comment data
-        data = {
-            'fb_dtsg': fb_dtsg,
-            'comment_text': comment_text,
-            'source': 'feed'
-        }
-        
-        # Make the comment request
-        comment_url = f'https://www.facebook.com/ajax/ufi/modify.php'
-        response = requests.post(comment_url, headers=headers, data=data, timeout=10)
-        
-        if response.status_code == 200 and '"error":0' in response.text:
-            print(f"Comment posted successfully using cookie")
-            return True
-        else:
-            print(f"Error posting comment: {response.text}")
-            return False
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
             
-    except Exception as e:
-        print(f"Exception while posting comment: {str(e)}")
-        return False
+            try {
+                const response = await fetch('/start', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if(result.task_id) {
+                    startTaskMonitoring(result.task_id);
+                }
+            } catch(error) {
+                alert('Error: ' + error.message);
+            }
+        });
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+        function startTaskMonitoring(taskId) {
+            const taskBox = document.createElement('div');
+            taskBox.className = 'task-box';
+            taskBox.innerHTML = `
+                <h5>Task ID: ${taskId}</h5>
+                <div id="stats-${taskId}">Loading...</div>
+                <button onclick="stopTask('${taskId}')" class="btn btn-danger btn-sm">Stop</button>
+                <hr>
+            `;
+            tasksContainer.prepend(taskBox);
+            
+            // Start polling for updates
+            setInterval(async () => {
+                const response = await fetch(`/status/${taskId}`);
+                const data = await response.json();
+                
+                if(data.status) {
+                    document.getElementById(`stats-${taskId}`).innerHTML = `
+                        Status: ${data.status}<br>
+                        Success: ${data.success || 0}<br>
+                        Failed: ${data.failed || 0}<br>
+                        Total Cookies: ${data.cookies_used || 0}
+                    `;
+                }
+                
+                // Update logs
+                const logsResponse = await fetch(`/logs/${taskId}`);
+                const logs = await logsResponse.json();
+                liveLogs.innerHTML = logs.join('<br>');
+                liveLogs.scrollTop = liveLogs.scrollHeight;
+            }, 2000);
+        }
+
+        function stopTask(taskId) {
+            fetch(`/stop/${taskId}`);
+        }
+    </script>
+</body>
+</html>
