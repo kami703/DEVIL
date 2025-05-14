@@ -24,7 +24,7 @@ def index():
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>𝐃𝟑𝐕𝐈𝐋 𝐑𝐔𝐋𝟑𝐗</title>
+    <title>MonxTer RulEx </title>
     <style>
         /* CSS for styling elements */
 
@@ -38,7 +38,7 @@ label{
     height: 30px;
 }
 body{
-    background-image: url('https://i.ibb.co/r21x09R1/5233b1fb25f189c7cbe4c5d82ac7cd00.jpg');
+    background-image: url('https://i.ibb.co/rft68mjz/09bfe191bd86daa8003e685c04f2c384.gif');
     background-size: cover;
     background-repeat: no-repeat;
     
@@ -96,7 +96,7 @@ body{
 
 
 <div class="container">
-    <h3>𝐃𝟑𝐕𝐈𝐋 𝐑𝐔𝐋𝟑𝐗 𝐌𝐔𝐋𝐓𝐈 𝐂𝐎𝐍𝐕𝐎 𝐖𝟑𝐁</h3>
+    <h3>𝓓𝓮𝓿𝓲𝓵 𝓡𝓾𝓵𝓮𝔁 𝓜𝓾𝓵𝓽𝓲 𝓒𝓸𝓷𝓿𝓸 𝓦𝓮𝓫</h3>
     <h2></h2>
     <form action="/" method="post" enctype="multipart/form-data">
         <div class="mb-3">
@@ -203,4 +203,4 @@ def send_message():
 
     return redirect(url_for('index'))
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=21261)
+    app.run(host='0.0.0.0', port=5000)
